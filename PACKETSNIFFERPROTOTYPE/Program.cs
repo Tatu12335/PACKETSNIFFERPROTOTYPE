@@ -5,6 +5,15 @@ using System.Diagnostics;
 using System.Collections.Generic;
 
 using PcapDotNet = PcapDotNet.Packets.Packet;
+using PcapDotNet.Core.Extensions;
+using System.Xml.Linq;
+using PcapDotNet.Packets;
+using System.Net.Sockets;
+using PacketDotNet.DhcpV4;
+using System.Runtime.CompilerServices;
+using System.Collections;
+using System.Globalization;
+using System.Net.NetworkInformation;
 
 // This is a prototype for a packet sniffer application using PcapDotNet library
 // I already wrote the core logic for the project, but it was a mess so i decided to clean it up and start fresh
@@ -17,7 +26,7 @@ namespace PACKETSNIFFERPROTOTYPE
 {
     class Program
     {
-        
+
         static void Main(string[] args)
         {
             // Retrieve the device list
@@ -31,7 +40,7 @@ namespace PACKETSNIFFERPROTOTYPE
             {
                 Console.WriteLine("The following interfaces are available:");
                 Console.WriteLine();
-                for (int i = 0; i != allDevices.Count;i++)
+                for (int i = 0; i != allDevices.Count; i++)
                 {
 
                     LivePacketDevice device = allDevices[i];
@@ -41,6 +50,8 @@ namespace PACKETSNIFFERPROTOTYPE
                     if (device.Description != null)
                     {
                         Console.WriteLine(" (" + device.Description + ")");
+                        
+
 
                     }
                     else
@@ -48,12 +59,12 @@ namespace PACKETSNIFFERPROTOTYPE
                         Console.WriteLine(" (No description available)");
                     }
 
-                  
+
                 }
                 try
                 {
-                    // Call the SelectDevice method to get the users device choice
-                    SelectDevice();
+                    // Call the start capture method with the selected device
+                    StartCapture(allDevices[SelectDevice()]);
                 }
                 catch (FormatException)
                 {
@@ -66,13 +77,18 @@ namespace PACKETSNIFFERPROTOTYPE
                 finally
                 {
                     // this is a placeholder for any cleanup code if needed in the future
-                    Console.WriteLine(" Finished processing device " );
+                    Console.WriteLine(" Finished processing device ");
 
                 }
+
             }
-            
+            int[] ints = { 1, 2, 3, 4, 5 };
 
             
+
+
+
+
         }
         public static int SelectDevice()
         {
@@ -92,13 +108,86 @@ namespace PACKETSNIFFERPROTOTYPE
             {
                 return deviceIndex;
             }
-
-
-
+        }
+        public static void StartCapture(LivePacketDevice device)
+        {
+            // Placeholder for starting packet capture on the selected device
+            Console.Clear();
+            Console.WriteLine($" Starting capturing packets on : {device.Name} ctrl + c to stop");
             
+            while (true)
+            {
+
+                using(PacketCommunicator communicator = device.Open(65536, PacketDeviceOpenAttributes.Promiscuous, 1000))
+                {
+                    // Start the capture
+                    communicator.ReceivePackets(0, packet =>
+                    {
+                        // Process each packet
+                        Console.WriteLine(packet.IpV4.ToString());
+
+                    });
+                }
+               
+                
+               
+
+            }
+            
+
+        }
+        // Placeholder for checking traffic patterns
+        public static void CheckForTraffic(PacketCommunicator communicator, LivePacketDevice selectedDevice)
+        {
+
+            Console.WriteLine(" Checking for specific traffic patterns...");
+            while (true)
+            {
+                //communicator =  selectedDevice.Open(65536, PacketDeviceOpenAttributes.Promiscuous, 1000);
+
+                for (int i = 0; i < 10; i++)
+                {
+                    communicator.ReceivePackets(0, packet =>
+                    {
+                        // Analyze each packet for specific patterns
+                       
+                        Console.WriteLine(" Analyzing packet for patterns...");
+                        
+
+                        if (packet.Count >= 0 )
+                        {
+                            Console.WriteLine($"Device : {selectedDevice}. Doesnt have traffic");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Device : {selectedDevice}. Has traffic");
+                        }
+
+                        Task.Delay(1000).Wait();
+                    });
+                }
+            }
+
+
 
 
         }
+        public static void AlertOnSuspiciousActivity()
+        {
+            // Placeholder for alerting on suspicious activity
+            Console.WriteLine(" Alerting on suspicious activity...");
+        }
+        public static void SaveCapturedData()
+        {
+            // Placeholder for saving captured data
+            Console.WriteLine(" Saving captured data...");
+        }
 
+        public static void LogPacketDataToFile()
+       {
+            // Placeholder for logging packet data
+            Console.WriteLine(" Logging packet data...");
+       }
     }
+    
 }
