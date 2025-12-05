@@ -3,7 +3,6 @@ using PcapDotNet.Core;
 using System.Net;
 using System.Diagnostics;
 using System.Collections.Generic;
-
 using PcapDotNet = PcapDotNet.Packets.Packet;
 using PcapDotNet.Core.Extensions;
 using System.Xml.Linq;
@@ -14,6 +13,15 @@ using System.Runtime.CompilerServices;
 using System.Collections;
 using System.Globalization;
 using System.Net.NetworkInformation;
+using PcapDotNet.Packets.IpV6;
+using PcapDotNet.Packets.Ip;
+using PacketDotNet.Ieee80211;
+using PcapDotNet.Packets.IpV4;
+using PcapDotNet.Packets.Icmp;
+using Microsoft.VisualBasic.FileIO;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection.PortableExecutable;
+
 
 // This is a prototype for a packet sniffer application using PcapDotNet library
 // I already wrote the core logic for the project, but it was a mess so i decided to clean it up and start fresh
@@ -29,6 +37,10 @@ namespace PACKETSNIFFERPROTOTYPE
 
         static void Main(string[] args)
         {
+
+            // Handle Ctrl + C event to stop packet capture gracefully
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(HandleCancelKeyPress);  
+
             // Retrieve the device list
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
             if (allDevices.Count == 0)
@@ -50,9 +62,8 @@ namespace PACKETSNIFFERPROTOTYPE
                     if (device.Description != null)
                     {
                         Console.WriteLine(" (" + device.Description + ")");
+
                         
-
-
                     }
                     else
                     {
@@ -82,7 +93,7 @@ namespace PACKETSNIFFERPROTOTYPE
                 }
 
             }
-            int[] ints = { 1, 2, 3, 4, 5 };
+            
 
             
 
@@ -109,13 +120,17 @@ namespace PACKETSNIFFERPROTOTYPE
                 return deviceIndex;
             }
         }
+        private static bool _IsCancelled = false;
+
         public static void StartCapture(LivePacketDevice device)
         {
+            
+
             // Placeholder for starting packet capture on the selected device
             Console.Clear();
             Console.WriteLine($" Starting capturing packets on : {device.Name} ctrl + c to stop");
             
-            while (true)
+            while (!_IsCancelled)
             {
 
                 using(PacketCommunicator communicator = device.Open(65536, PacketDeviceOpenAttributes.Promiscuous, 1000))
@@ -123,52 +138,45 @@ namespace PACKETSNIFFERPROTOTYPE
                     // Start the capture
                     communicator.ReceivePackets(0, packet =>
                     {
+
+                        IpV4Datagram ipv4Packet = packet.Ethernet.IpV4;
+
+
                         // Process each packet
-                        Console.WriteLine(packet.IpV4.ToString());
+                        Console.WriteLine($"Source : {ipv4Packet.Source} | Destinatination : {ipv4Packet.Destination} | Payload : {ipv4Packet.Payload} | Protocol  : {ipv4Packet.Protocol} |");
 
                     });
+                    
                 }
-               
                 
-               
+
+
 
             }
-            
+           
+
 
         }
-        // Placeholder for checking traffic patterns
-        public static void CheckForTraffic(PacketCommunicator communicator, LivePacketDevice selectedDevice)
+        // Handle Ctrl + C event to stop packet capture gracefully and save data to desktop or documents.
+        private static void HandleCancelKeyPress(object? sender , ConsoleCancelEventArgs e)
         {
+            e.Cancel = true;
+            
 
-            Console.WriteLine(" Checking for specific traffic patterns...");
-            while (true)
+            Console.WriteLine(" Saving captured data...");
+            var curDir = FileSystem.GetDirectoryInfo("desktop");
+
+            if (curDir == null)
             {
-                //communicator =  selectedDevice.Open(65536, PacketDeviceOpenAttributes.Promiscuous, 1000);
-
-                for (int i = 0; i < 10; i++)
-                {
-                    communicator.ReceivePackets(0, packet =>
-                    {
-                        // Analyze each packet for specific patterns
-                       
-                        Console.WriteLine(" Analyzing packet for patterns...");
-                        
-
-                        if (packet.Count >= 0 )
-                        {
-                            Console.WriteLine($"Device : {selectedDevice}. Doesnt have traffic");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Device : {selectedDevice}. Has traffic");
-                        }
-
-                        Task.Delay(1000).Wait();
-                    });
-                }
+                curDir = FileSystem.GetDirectoryInfo("documents");
             }
 
 
+            Console.WriteLine(" Stopping packet capture...");
+            Console.WriteLine($" Logging captured packets to a location {curDir} ");
+
+            _IsCancelled = true;
+            FileSystem.WriteAllText(Path.Combine(curDir.FullName, "captured_packets_log.pcap"));
 
 
         }
@@ -177,17 +185,9 @@ namespace PACKETSNIFFERPROTOTYPE
             // Placeholder for alerting on suspicious activity
             Console.WriteLine(" Alerting on suspicious activity...");
         }
-        public static void SaveCapturedData()
-        {
-            // Placeholder for saving captured data
-            Console.WriteLine(" Saving captured data...");
-        }
+        
 
-        public static void LogPacketDataToFile()
-       {
-            // Placeholder for logging packet data
-            Console.WriteLine(" Logging packet data...");
-       }
+      
     }
     
 }
