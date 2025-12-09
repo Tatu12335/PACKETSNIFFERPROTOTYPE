@@ -1,29 +1,31 @@
 ﻿
 // Dependencies
-using PcapDotNet.Core;
-using System.Net;
-using System.Diagnostics;
-using System.Collections.Generic;
-using PcapDotNet.Core.Extensions;
-using System.Xml.Linq;
-using PcapDotNet.Packets;
-using System.Net.Sockets;
-using PacketDotNet.DhcpV4;
-using System.Runtime.CompilerServices;
-using System.Collections;
-using System.Globalization;
-using System.Net.NetworkInformation;
-using PcapDotNet.Packets.IpV6;
-using PcapDotNet.Packets.Ip;
-using PacketDotNet.Ieee80211;
-using PcapDotNet.Packets.IpV4;
-using PcapDotNet.Packets.Icmp;
 using Microsoft.VisualBasic.FileIO;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection.PortableExecutable;
-using System.Threading.Channels;
 using PacketDotNet;
+using PacketDotNet.DhcpV4;
+using PacketDotNet.Ieee80211;
+using PcapDotNet.Core;
+using PcapDotNet.Core.Extensions;
+using PcapDotNet.Packets;
+using PcapDotNet.Packets.Icmp;
+using PcapDotNet.Packets.Ip;
+using PcapDotNet.Packets.IpV4;
+using PcapDotNet.Packets.IpV6;
+using PcapDotNet.Packets.Transport;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Globalization;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Channels;
+using System.Xml.Linq;
 
 
 
@@ -58,11 +60,13 @@ namespace PACKETSNIFFERPROTOTYPE
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
             if (allDevices.Count == 0)
             {
+                // If count is 0 there are no interfaces found
                 Console.WriteLine(" No interfaces found! Make sure WinPcap is installed.");
                 return;
             }
             else
             {
+                // Else list the Interfaces
                 Console.WriteLine(" The following interfaces are available : ");
                 Console.WriteLine();
                 for (int i = 0; i != allDevices.Count; i++)
@@ -70,7 +74,8 @@ namespace PACKETSNIFFERPROTOTYPE
 
                     LivePacketDevice device = allDevices[i];
 
-                    Console.Write((i + 1) + $".|| " + device.Name);
+                    // To have an index to start at 1, we have the i index writen as +1
+                    Console.Write((i + 1 ) + $".|| " + device.Name);
 
                     if (device.Description != null)
                     {
@@ -92,6 +97,7 @@ namespace PACKETSNIFFERPROTOTYPE
                 }
                 catch (FormatException)
                 {
+                    // In case of invalid input
                     Console.WriteLine(" Invalid input. Please enter a valid number.");
                 }
                 catch (Exception ex)
@@ -107,11 +113,6 @@ namespace PACKETSNIFFERPROTOTYPE
 
             }
             
-
-            
-
-
-
 
         }
         public static int SelectDevice()
@@ -164,7 +165,8 @@ namespace PACKETSNIFFERPROTOTYPE
                         IpV6Datagram ipv6Packet = packet.Ethernet.IpV6;
                         packet.DataLink.ToString();
 
-                        MagicMethod(packet);
+                        // Calls the filter method to filter http/https traffic and analyze the packet
+                        FilterHttpTrafic(packet, null, null);
 
 
 
@@ -189,75 +191,114 @@ namespace PACKETSNIFFERPROTOTYPE
 
             // Save captured data to desktop or documents folder
             Console.WriteLine(" Saving captured data...");
-            var curDir = FileSystem.GetDirectoryInfo("desktop");
 
+            Console.WriteLine(" Stopping packet capture...");
+            
+            _IsCancelled = true;
+            e.Cancel = false;
+            Environment.Exit(0);
+
+
+
+        }
+        public static void LogPacketDetails(PcapDotNet.Packets.Packet packet)
+        {
+
+
+            var curDir = FileSystem.CurrentDirectory;
+            DateTime dateTime = DateTime.Now;
+
+
+            // Try to get desktop, else try to find documents
+            try
+            {
+                curDir = Environment.GetEnvironmentVariable("USERPROFILE") + "\\Desktop\\";
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                Console.BackgroundColor = ConsoleColor.Red;
+                Console.WriteLine(" Could not find desktop folder, trying documents folder...");
+                Console.BackgroundColor = ConsoleColor.Black;
+            }
+            catch (Exception ex)
+            {
+                Console.BackgroundColor = ConsoleColor.Red;
+                Console.WriteLine($" Unexpected error occured finding desktop folder | ERROR : {ex.Message} |");
+                Console.BackgroundColor = ConsoleColor.Black;
+            }
 
             try
             {
-                curDir = FileSystem.GetDirectoryInfo("documents");
+                curDir = Environment.GetEnvironmentVariable("USERPROFILE") + "\\Documents\\";
             }
-            catch( DirectoryNotFoundException ex)
+            catch (DirectoryNotFoundException ex)
             {
                 // If both desktop and documents folders are not found, save to captured_packets folder in current directory
                 Console.WriteLine(" Could not find desktop or documents folder, saving to current directory.");
                 FileSystem.CreateDirectory("captured_packets");
-                curDir = FileSystem.GetDirectoryInfo("captured_packets");
+                curDir = Environment.GetEnvironmentVariable("captured_packets");
             }
-               
-
+            catch (Exception ex)
+            {
+                Console.BackgroundColor = ConsoleColor.Red;
+                Console.WriteLine($" Unexpected error occured finding documents folder | ERROR : {ex.Message} |");
+                Console.BackgroundColor = ConsoleColor.Black;
+            }
+           
             
-
-            Console.WriteLine(" Stopping packet capture...");
+            try
+            {
+                File.Create(curDir + $"captured_packets({dateTime}.pcap)");
+            }
+            catch (Exception ex)
+            {
+                Console.BackgroundColor = ConsoleColor.Red;
+                Console.WriteLine($" Unexpected error occured creating file | ERROR : {ex.Message} |");
+                Console.BackgroundColor = ConsoleColor.Black;
+            }
             Console.BackgroundColor = ConsoleColor.Red;
             Console.WriteLine($" Logging captured packets to a location (\"{curDir}\") ");
-
-            _IsCancelled = true;
-
+            Console.BackgroundColor = ConsoleColor.Black;
             try
             {
                 // Tries to save the captured data to a file without appending
                 FileSystem.WriteAllText(
-                    Path.Combine(curDir.FullName, "captured_packets_log.pcap"), $"", false);
+                    Path.Combine(curDir, $"captured_packets{dateTime}.pcap"), $"{packet}", false);
             }
             catch (UnauthorizedAccessException uaEx)
             {
                 // Handle unauthorized access exception
                 Console.BackgroundColor = ConsoleColor.Red;
                 Console.WriteLine($" Access denied saving the data to a file | ERROR : {uaEx.Message} |");
+                Console.BackgroundColor = ConsoleColor.Black;
             }
             catch (IOException ioEx)
             {
                 // Handle I/O exception
                 Console.BackgroundColor = ConsoleColor.Red;
                 Console.WriteLine($" I/O error occured saving the data to a file | ERROR : {ioEx.Message} |");
-                
+                Console.BackgroundColor = ConsoleColor.Black;
             }
             catch (Exception ex)
             {
                 // Handle any other exceptions
                 Console.BackgroundColor = ConsoleColor.Red;
                 Console.WriteLine($" Unexpected error occured saving the data to a file | ERROR : {ex.Message} |");
-              
-            }
-            finally
-            {
-                // Exit the application gracefully
-                e.Cancel = false;
-                Console.WriteLine(" Packet capture stopped. Exiting application...");
-                Console.BackgroundColor = ConsoleColor.Red;
                 Console.BackgroundColor = ConsoleColor.Black;
-                Environment.Exit(0);
 
             }
 
-
+           
         }
+        // This method analyzes the packet and prints relevant information
+        // Sorry for the name, couldnt think of a better one at the time
         public static void MagicMethod(PcapDotNet.Packets.Packet packet)
         {
            
             IpV4Datagram ipv4Packet = packet.Ethernet.IpV4;
             IpV6Datagram ipv6Packet = packet.Ethernet.IpV6;
 
+            // If its ipV4 packet
             if (ipv4Packet != null)
             {
                 if (ipv4Packet.Protocol == IpV4Protocol.Tcp)
@@ -276,14 +317,91 @@ namespace PACKETSNIFFERPROTOTYPE
                 }
 
             }
+            // Else if its ipV6 packet
             else if (ipv6Packet != null)
             {
                 Console.WriteLine(" Is ipv6");
             }
+            // Else its a non ip packet 
             else
             {
                 Console.WriteLine(" Non ip packet");
             }
+        }
+        // Despite what the name says this is supposed to filter http AND https traffic
+        // I will be adding more filtering logic in the future
+        // Returns a the packet
+        public static PcapDotNet.Packets.Packet FilterHttpTrafic(PcapDotNet.Packets.Packet packet, UdpDatagram? udp, TcpDatagram? tcp)
+        {
+            try
+            {
+                tcp = packet.Ethernet.IpV4.Tcp;
+                udp = packet.Ethernet.IpV4.Udp;
+
+                // Check for http and https traffic on both tcp and udp protocols, not sure if this is the best way but i tried
+                // I plan on making more filtering logic in the future
+
+                // NOTE : Fix the logic here its messy!!!!!
+                if (tcp.DestinationPort == 443 || tcp.SourcePort == 443)
+                {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.WriteLine(" Tcp https packet detected filtering it out ");
+                    Console.BackgroundColor = ConsoleColor.Black;
+
+                   
+
+                    return packet;
+                }
+                else if (tcp.DestinationPort == 80 || tcp.SourcePort == 80)
+                {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.WriteLine(" Tcp http packet detected filtering it out");
+                    Console.BackgroundColor = ConsoleColor.Black;
+
+                    return packet;
+                }
+                //  
+                if (udp.DestinationPort == 443 || udp.SourcePort == 443)
+                {
+
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.WriteLine(" Udp https packet detected filtering it out ");
+                    Console.BackgroundColor = ConsoleColor.Black;
+
+                   
+                    return packet;
+
+                }
+                if (udp.DestinationPort == 80 || udp.SourcePort == 80)
+                {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.WriteLine(" Udp http packet detected filtering it out");
+                    Console.BackgroundColor = ConsoleColor.Black;
+
+                    return packet;
+
+                }
+                else
+                {
+                    MagicMethod(packet);
+                    return packet;
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($" Unexpected error occured filtering http/s packet| ERROR : {e.Message} |");
+                return packet;
+            }
+        }
+        public static void CheckForBadChecksums()
+        {
+           
+        }
+        public static void DetectSuspiciousActivity()
+        {
+            // Placeholder for detecting suspicious activity
+            Console.WriteLine(" Detecting suspicious activity...");
         }
         public static void AlertOnSuspiciousActivity()
         {
