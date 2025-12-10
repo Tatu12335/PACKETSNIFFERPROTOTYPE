@@ -21,3 +21,16 @@ stuff out about it so to speak its in finnish but if someone reads this document
 But anyway id like to continue with the project, even when i have been making this project for a day and wrote 90 lines, i have been gaining a more well rounded experience
 about loops, what type of code is easier to work with, and how documenting and naming correctly can make or break your code, i dont know if i should say that ive gone a little
 overboard with documenting the sourcefile but isnt it good to be more descriptive about your code? someone else might someday be maintaining it and have no idea what youve done.
+
+
+About the features :
+
+basicly anything this program does is done whether the user wants to or no, for example loging to a file in desktop is done
+automatically. Some of the features are a work in progress, im trying to make the code as clean as i can 
+it doesnt look so good so far but im still trying.
+
+
+About vulnerabilities : 
+
+Only god knows how many flaws my newbie ahh code has but if you find some please let me know im not sure how the industry 
+deals with reporting vulnerabilities but please just let me know. Thanks!
