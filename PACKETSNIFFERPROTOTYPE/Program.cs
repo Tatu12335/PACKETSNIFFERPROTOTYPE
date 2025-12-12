@@ -24,7 +24,7 @@ using System.Linq;
 
 // 600 lines of code later... i thought to myself, why not split this into multiple files and use oop
 
-// Hours wasted : 8
+// Hours wasted : 9:30
 
 namespace PACKETSNIFFERPROTOTYPE
 {
@@ -41,7 +41,7 @@ namespace PACKETSNIFFERPROTOTYPE
         // A list to store flags detected in packets
         private static List<string?> Flags = new List<string?>();
         // A dictionary for ip addresses and when they sent packets
-        private static Dictionary<string?,int?> pairsSource = new Dictionary<string?, int?>();
+        public static Dictionary<string?,int?> pairsSource = new Dictionary<string?, int?>();
         // A dictionary for destination ip addresses and when they received packets
         private static Dictionary<string?, int?> pairsDestination = new Dictionary<string?, int?>();
 
@@ -144,7 +144,7 @@ namespace PACKETSNIFFERPROTOTYPE
 
                         IpV4Datagram ipv4Packet = packet.Ethernet.IpV4;
                         IpV6Datagram ipv6Packet = packet.Ethernet.IpV6;
-
+                         
                         // Calls the filter method to filter http/https traffic and analyze the packet
                         _FilterHttpTrafic(packet);
                     });
@@ -547,11 +547,6 @@ namespace PACKETSNIFFERPROTOTYPE
         private static void _CheckForBadChecksums()
         {
 
-        }
-        private static string _logSourceIp(PcapDotNet.Packets.Packet packet)
-        {      
-            
-            return "";
         }
         private static bool _DetectPortScans(PcapDotNet.Packets.Packet packet)
         {
