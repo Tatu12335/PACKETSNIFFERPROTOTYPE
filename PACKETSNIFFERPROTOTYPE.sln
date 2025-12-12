@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "methods", "methods", "{02EA
 		IpCount.cs = IpCount.cs
 	EndProjectSection
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup2", "Setup2\Setup2.vdproj", "{657E2043-FDBC-F1DC-4CD9-351906DA97D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,8 @@ Global
 		{F1784115-BC52-4FF1-9A5A-ADEE8CB78D38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1784115-BC52-4FF1-9A5A-ADEE8CB78D38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1784115-BC52-4FF1-9A5A-ADEE8CB78D38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{657E2043-FDBC-F1DC-4CD9-351906DA97D6}.Debug|Any CPU.ActiveCfg = Debug
+		{657E2043-FDBC-F1DC-4CD9-351906DA97D6}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
