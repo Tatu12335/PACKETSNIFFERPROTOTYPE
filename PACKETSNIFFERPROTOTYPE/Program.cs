@@ -43,7 +43,7 @@ namespace PACKETSNIFFERPROTOTYPE
         // A dictionary for ip addresses and when they sent packets
         public static Dictionary<string?,int?> pairsSource = new Dictionary<string?, int?>();
         // A dictionary for destination ip addresses and when they received packets
-        private static Dictionary<string?, int?> pairsDestination = new Dictionary<string?, int?>();
+       // private static Dictionary<string?, int?> pairsDestination = new Dictionary<string?, int?>();
 
         static void Main(string[] args)
         {
@@ -64,7 +64,7 @@ namespace PACKETSNIFFERPROTOTYPE
                 {
                     LivePacketDevice device = allDevices[i];
 
-                    // To have an index to start at 1, we have the i index writen as +1
+                    // To have an index to start at 1, we have the i + 1
                     Console.Write((i + 1) + $".|| " + device.Name);
 
                     if (device.Description != null)
@@ -307,6 +307,7 @@ namespace PACKETSNIFFERPROTOTYPE
 
                     capturedPackets.Add(Packet);
                     Console.WriteLine(Packet);
+                    _DetectStealhScans(new List<string?> { ipv4Packet.Source.ToString(), ipv4Packet.Destination.ToString() });
                 }
 
             }
@@ -543,7 +544,23 @@ namespace PACKETSNIFFERPROTOTYPE
             }
             return $" No flags detected on packet : {packet.ToString()}";
         }
-    
+        private static void _DetectStealhScans(List<string?> addresses )
+        {
+            // Placeholder for detecting stealth scans
+            Console.Write(" Detecting stealth scans...");
+            
+            for(int i = 0; i < addresses.Count; i++)
+            {
+                var address = addresses[i];
+                
+            }
+            var groupedAddresses = addresses.GroupBy(addr => addr)
+                                          .Select(group => new { Address = group.Key, Count = group.Count() })
+                                          .Where(g => g.Count > 10); 
+            Console.WriteLine(groupedAddresses);
+
+
+        }
         private static void _CheckForBadChecksums()
         {
 
@@ -551,11 +568,30 @@ namespace PACKETSNIFFERPROTOTYPE
         private static bool _DetectPortScans(PcapDotNet.Packets.Packet packet)
         {
             
-            var tcp = packet.IpV4.Tcp;
-            var udp = packet.IpV4.Udp;
-
-
+            var ipv4 = packet.IpV4;
             
+
+            if (ipv4 != null)
+            {
+                // Check for TCP/IPv4 port scans, I decided to get the protocols separately for easier reading and later expansion.
+                if (ipv4.Tcp != null)
+                {
+                    // Placeholder for port scan detection logic
+                    
+
+                }
+                else if (ipv4.Udp!= null)
+                {
+                    // Placeholder for port scan detection logic
+
+                }
+                else
+                {
+                    // Placeholder for other protocol port scan detection logic
+                }
+            }
+
+
             return false;
         }
         private static void _DetectSuspiciousActivity()
