@@ -37,11 +37,11 @@ namespace PACKETSNIFFERPROTOTYPE
         private static DateTime _startTime { get; } = DateTime.UtcNow;
 
         // A list to store captured packets temporarily
-        private static List<string?> capturedPackets = new List<string?>();
+        private static List<string> capturedPackets = new List<string?>();
         // A list to store flags detected in packets
-        private static List<string?> Flags = new List<string?>();
+        private static List<string> Flags = new List<string?>();
         // A dictionary for ip addresses and when they sent packets
-        public static Dictionary<string?,int?> pairsSource = new Dictionary<string?, int?>();
+        public static Dictionary<string,int?> pairsSource = new Dictionary<string?, int?>();
         // A dictionary for destination ip addresses and when they received packets
        // private static Dictionary<string?, int?> pairsDestination = new Dictionary<string?, int?>();
 
