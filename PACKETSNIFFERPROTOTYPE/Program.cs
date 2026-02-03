@@ -134,8 +134,6 @@ namespace PACKETSNIFFERPROTOTYPE
             while (!_IsCancelled)
             {
 
-                Thread.Sleep(2000); // Sleep for a short duration to prevent high CPU usage
-
                 using (PacketCommunicator communicator = device.Open(65536, PacketDeviceOpenAttributes.Promiscuous, 2000))
                 {
                     // Start the capture
